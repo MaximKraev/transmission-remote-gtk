@@ -163,10 +163,10 @@ gtk_combo_box_entry_active_changed(GtkComboBox * combo_box,
                 editableEntry = FALSE;
         }
     }
-    gtk_editable_set_editable(GTK_EDITABLE
-                              (trg_destination_combo_get_entry
-                               (TRG_DESTINATION_COMBO(combo_box))),
-                              editableEntry);
+    //~ gtk_editable_set_editable(GTK_EDITABLE
+                              //~ (trg_destination_combo_get_entry
+                               //~ (TRG_DESTINATION_COMBO(combo_box))),
+                              //~ editableEntry);
 }
 
 gboolean trg_destination_combo_has_text(TrgDestinationCombo * combo)
@@ -179,10 +179,12 @@ gboolean trg_destination_combo_has_text(TrgDestinationCombo * combo)
 
 GtkEntry *trg_destination_combo_get_entry(TrgDestinationCombo * combo)
 {
-    TrgDestinationComboPrivate *priv =
-        TRG_DESTINATION_COMBO_GET_PRIVATE(combo);
-    return GTK_ENTRY(priv->entry);
+    //~ TrgDestinationComboPrivate *priv =
+        //~ TRG_DESTINATION_COMBO_GET_PRIVATE(combo);
+    //~ return GTK_ENTRY(priv->entry);
+    return GTK_ENTRY(gtk_bin_get_child(GTK_BIN(combo)));
 }
+
 
 static void
 add_entry_cb(GtkEntry * entry,
@@ -265,6 +267,7 @@ static GObject *trg_destination_combo_constructor(GType type,
         (trg_destination_combo_parent_class)->constructor(type,
                                                           n_construct_properties,
                                                           construct_params);
+
     TrgDestinationComboPrivate *priv =
         TRG_DESTINATION_COMBO_GET_PRIVATE(object);
 
@@ -281,6 +284,8 @@ static GObject *trg_destination_combo_constructor(GType type,
     gchar *defaultDir;
     gchar *lastDestination = NULL;
 
+    gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(object),1);
+
     comboModel = gtk_list_store_new(N_DEST_COLUMNS, G_TYPE_STRING,
                                     G_TYPE_STRING, G_TYPE_UINT);
     gtk_combo_box_set_model(GTK_COMBO_BOX(object),
@@ -290,8 +295,8 @@ static GObject *trg_destination_combo_constructor(GType type,
     g_signal_connect(object, "changed",
                      G_CALLBACK(gtk_combo_box_entry_active_changed), NULL);
 
-    priv->entry = gtk_entry_new();
-    gtk_container_add(GTK_CONTAINER(object), priv->entry);
+    //~ priv->entry = gtk_entry_new();
+    //~ gtk_container_add(GTK_CONTAINER(object), priv->entry);
 
     priv->text_renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(object),
@@ -303,12 +308,12 @@ static GObject *trg_destination_combo_constructor(GType type,
     g_slist_foreach(dirs, (GFunc) g_free, NULL);
     g_slist_free(dirs);
 
-    gtk_entry_set_icon_from_stock(GTK_ENTRY(priv->entry),
-                                  GTK_ENTRY_ICON_SECONDARY,
-                                  GTK_STOCK_CLEAR);
+    //~ gtk_entry_set_icon_from_stock(GTK_ENTRY(priv->entry),
+                                  //~ GTK_ENTRY_ICON_SECONDARY,
+                                  //~ GTK_STOCK_CLEAR);
 
-    g_signal_connect(priv->entry, "icon-release",
-                     G_CALLBACK(add_entry_cb), object);
+    //~ g_signal_connect(GTK_ENTRY(priv->entry), "icon-release",
+                     //~ G_CALLBACK(add_entry_cb), object);
 
     defaultDir =
         g_strdup(session_get_download_dir(trg_client_get_session(client)));
@@ -453,8 +458,26 @@ static void trg_destination_combo_init(TrgDestinationCombo * self)
 GtkWidget *trg_destination_combo_new(TrgClient * client,
                                      const gchar * lastSelectionKey)
 {
-    return GTK_WIDGET(g_object_new(TRG_TYPE_DESTINATION_COMBO,
+    //~ return GTK_WIDGET(g_object_new(TRG_TYPE_DESTINATION_COMBO,
+                                   //~ "trg-client", client,
+                                   //~ "last-selection-key", lastSelectionKey,
+                                   //~ NULL));
+    GtkWidget *gw;
+    GtkEntry *gentry;
+    gw = GTK_WIDGET(g_object_new(TRG_TYPE_DESTINATION_COMBO,
                                    "trg-client", client,
                                    "last-selection-key", lastSelectionKey,
+                                   "has-entry", TRUE,
+                                   //~ "entry-text-column", 1,
                                    NULL));
+    gentry = GTK_ENTRY(gtk_bin_get_child(GTK_BIN(gw)));
+    gtk_entry_set_text(gentry,session_get_download_dir(trg_client_get_session(client)));
+    gtk_entry_set_icon_from_stock(gentry,
+                                  GTK_ENTRY_ICON_SECONDARY,
+                                  GTK_STOCK_CLEAR);
+
+    g_signal_connect(gentry, "icon-release",
+                     G_CALLBACK(add_entry_cb), gw);
+
+    return gw;
 }
